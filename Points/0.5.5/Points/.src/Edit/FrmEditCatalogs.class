@@ -1,0 +1,106 @@
+' Gambas class file
+
+' Gambas class file
+
+Public CatalogID As New Integer[]
+
+Public MC As New MainClass
+Public ObjRes As Result
+
+Public OLD As String
+
+Function Refresh()
+    Dim i As Integer
+    
+    Cmbcatalog.Clear()
+    CatalogID.Clear()
+    
+    ObjRes = mc.CConnection().Exec("select id,catalogname from catalogs")
+    For i = 1 To ObjRes.Count
+        Cmbcatalog.Add(ObjRes!catalogname)
+        CatalogID.Add(ObjRes!id)
+        ObjRes.MoveNext
+    Next
+    
+    If Cmbcatalog.Count = 0 Then
+        Panel1.Enabled = False
+        BtnEdit.Enabled = False
+        BtnDel.Enabled = False
+        TxtCatalog.Text = ""
+    Else
+        TxtCatalog.Text = Cmbcatalog.Text
+        OLD = Cmbcatalog.Text
+        Panel1.Enabled = True
+        BtnEdit.Enabled = True
+        BtnDel.Enabled = True
+    Endif  
+    
+End
+
+
+Public Sub Form_Open()
+    
+    Me.Center()
+    
+    Refresh()
+
+End
+
+Public Sub BtnExit_Click()
+
+    Me.Close()
+
+End
+
+
+Public Sub Cmbcatalog_Click()
+
+    TxtCatalog.Text = Cmbcatalog.Text
+
+End
+
+Public Sub BtnEdit_Click()
+    
+    If TxtCatalog.Text Then
+        
+        If TxtCatalog.Text <> OLD Then
+            
+            ObjRes = mc.CConnection().Exec("select count(id) as count from catalogs where catalogname='" & TxtCatalog.Text & "'")
+            
+            If CInt(ObjRes!count) = 0 Then
+                
+                mc.CConnection().Exec("update catalogs set catalogname='" & TxtCatalog.Text & "' where id=" & CatalogID[Cmbcatalog.Index])
+                Refresh()
+                
+            Else
+                Message("نام دسته جدید تکراری است")
+            Endif
+            
+            
+        Endif
+    
+    Else
+        Message("لطفا نام گروه جدید را وارد کنید")
+    Endif
+    
+End
+
+Public Sub BtnDel_Click()
+
+    If Message.Question("ایا مطمئن هستید", "بلی", "خیر") = 1 Then
+          
+        ObjRes = mc.CConnection().Exec("select count(id) as count from groups where catalogs_id=" & CatalogID[Cmbcatalog.Index])
+        If CInt(ObjRes!count) = 0 Then
+        
+            mc.CConnection().Exec("delete from catalogs where id=" & CatalogID[Cmbcatalog.Index])
+            Refresh()  
+        
+        Else
+            
+            Message.Error("این دسته شامل زیر مجموعه میباشد\n سیستم قادر به پاکسازی نیست")
+            
+        Endif
+        
+    Endif
+
+End

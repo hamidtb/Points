@@ -1,0 +1,344 @@
+' Gambas class file
+
+
+Public CatalogID As New Integer[]
+Public GroupID As New Integer[]
+Public SubGroupID As New Integer[]
+
+Public Sub Form_Show()
+
+    Dim mc As New MainClass
+    Dim ObjRes As Result
+    Dim i As Integer
+    
+    Me.Center()
+    
+    mc.CConnection().Open()
+    
+    ObjRes = mc.CConnection().Exec("select id,catalogname from catalogs")
+    If ObjRes.Count = 0 Then
+        PnlCatalog.Enabled = False
+        PnlPoint.Enabled = False
+        BtnAdd.Enabled = False
+    Else
+        PnlCatalog.Enabled = True
+        PnlPoint.Enabled = True
+        BtnAdd.Enabled = True
+        For i = 1 To ObjRes.Count
+            CmbCatlog.Add(ObjRes!catalogname)
+            CatalogID.Add(ObjRes!id)
+            ObjRes.MoveNext()
+        Next
+        CmbCatlog_Click()
+    Endif
+    
+    mc.CConnection().Close()
+
+End
+
+Public Sub BtnExit_Click()
+
+    Me.Close()
+
+End
+
+Public Sub CmbGroups_Click()
+
+    Dim mc As New MainClass
+    Dim ObjRes As Result
+    Dim i As Integer
+    
+    CmbSubgroups.Clear()
+    SubGroupID.Clear()
+    
+    mc.CConnection().Open()
+    
+    ObjRes = mc.CConnection().Exec("select id,subgroupname from subgroups where groups_id=" & GroupID[CmbGroups.Index])
+    If ObjRes.Count = 0 Then
+        CmbSubgroups.Enabled = False
+        PnlPoint.Enabled = False
+        BtnAdd.Enabled = False
+    Else
+        CmbSubgroups.Enabled = True
+        PnlPoint.Enabled = True
+        BtnAdd.Enabled = True
+        For i = 1 To ObjRes.Count
+            CmbSubgroups.Add(ObjRes!subgroupname)
+            SubGroupID.Add(ObjRes!id)
+            ObjRes.MoveNext()
+        Next
+    Endif
+    
+    mc.CConnection().Close()
+
+End
+
+Public Sub CmbCatlog_Click()
+
+    Dim mc As New MainClass
+    Dim ObjRes As Result
+    Dim i As Integer
+    
+    CmbGroups.Clear()
+    GroupID.Clear()
+    
+    mc.CConnection().Open()
+    
+    ObjRes = mc.CConnection().Exec("select id,groupname from groups where catalogs_id=" & CatalogID[CmbCatlog.Index])
+    If ObjRes.Count = 0 Then
+        CmbGroups.Enabled = False
+        CmbSubgroups.Enabled = False
+        PnlPoint.Enabled = False
+        BtnAdd.Enabled = False
+    Else
+        CmbGroups.Enabled = True
+        CmbSubgroups.Enabled = True
+        PnlPoint.Enabled = True
+        BtnAdd.Enabled = True
+        For i = 1 To ObjRes.Count
+            CmbGroups.Add(ObjRes!groupname)
+            GroupID.Add(ObjRes!id)
+            ObjRes.MoveNext()
+        Next
+    'CmbGroups_Click()
+    CmbGroups_Click()
+    Endif
+    
+    mc.CConnection().Close()
+
+End
+
+Public Sub BtnAdd_Click()
+
+    Dim MC As New MainClass
+    Dim ObjRes As Result
+    Dim RSpace As String
+    Dim Description As String
+    
+    Dim Count, MaxID As Integer
+    
+    Description = TxtDescription.RichText
+    Description = Replace(Description, "'", "''")
+    
+    'Print TxtDescription.RichText
+    
+    RSpace = LTrim(RTrim(TxtTitle.Text))
+    
+    If TxtTitle.Text And TxtDescription.Text Then
+        
+        mc.CConnection().Open()
+        ObjRes = mc.CConnection().Exec("select count(id) as Count from points where lower(title)='" & Lower(RSpace) & "' and subgroups_id=" & SubGroupID[CmbSubgroups.Index])
+        
+        If CInt(ObjRes!Count) > 0 Then
+            Message("نام نکته تکراری است")
+        Else
+            ObjRes = mc.CConnection().Exec("select max(id)as MaxID from points")
+            Try MaxID = ObjRes!MaxID
+            If Error Then
+                MaxID = 0
+            Else
+                MaxID += 1
+            Endif
+            If LblAttach.Text == "ضمیمه‌ای افزوده نشده است" Then
+                
+                'Print "insert into points (id,catalogs_id,groups_id,subgroups_id,title,description) values(" & MaxID & "," & CatalogID[CmbCatlog.Index] & "," & GroupID[CmbGroups.Index] & "," & SubGroupID[CmbSubgroups.Index] & ",'" & RSpace & "','" & Description & "')"
+                mc.CConnection().Exec("insert into points (id,catalogs_id,groups_id,subgroups_id,title,description,attach_file) values(" & MaxID & "," & CatalogID[CmbCatlog.Index] & "," & GroupID[CmbGroups.Index] & "," & SubGroupID[CmbSubgroups.Index] & ",'" & RSpace & "','" & Description & "','no_attach')")
+                
+            Else
+                 'Shell "zip '" & LblAttach.Text & "' " & user.Home & "/.Points/DB/AttachFiles/" & MaxID & ".zip"
+                 'Shell "cd '" & file.Dir(LblAttach.Text) & "'"
+                ' Print file.Dir(LblAttach.Text) 
+                 Shell "cd '" & file.Dir(LblAttach.Text) & "';" & " zip " & user.Home & "/.Points/DB/AttachFiles/" & MaxID & ".zip " & "'" & LblAttach.Tooltip & "'"
+                 'Shell " zip -r " & user.Home & "/.Points/DB/AttachFiles/" & MaxID & ".zip " & "'" & LblAttach.Text & "'"
+                 mc.CConnection().Exec("insert into points (id,catalogs_id,groups_id,subgroups_id,title,description,attach_file) values(" & MaxID & "," & CatalogID[CmbCatlog.Index] & "," & GroupID[CmbGroups.Index] & "," & SubGroupID[CmbSubgroups.Index] & ",'" & RSpace & "','" & Description & "','" & file.Name(LblAttach.Text) & "')")
+
+                
+            Endif
+
+            
+            TxtTitle.Clear()
+            TxtDescription.Clear()
+            LblAttach.Text = "ضمیمه‌ای افزوده نشده است"
+            BtnDelAttach.Visible = False
+            BtnOpenAttach.Visible = False
+            TxtTitle.SetFocus()
+        Endif
+        
+        mc.CConnection().Close()
+    Else
+        
+        Message.Warning("لطفا نام نکته و/یا متن نکته را وارد کنید")
+        
+    Endif
+    
+    
+
+End
+
+Public Sub TxtDescription_Cursor()
+    
+    Object.Lock(TBtnBold)
+    Object.Lock(TBtnCenterAlign)
+    Object.Lock(TBtnItalic)
+    Object.Lock(TBtnLeftAlign)
+    Object.Lock(TBtnRightAlign)
+    Object.Lock(TBtnStrike)
+    Object.Lock(TBtnUnderline)
+    Object.Lock(ClrBtnColor)
+    Object.Lock(ClrBtnBackColor)
+    Object.Lock(CmbFont)
+    Object.Lock(SpnSize)
+    
+
+    TBtnBold.Value = TxtDescription.Format.Font.Bold
+    TBtnItalic.Value = TxtDescription.Format.Font.Italic
+    TBtnUnderline.Value = TxtDescription.Format.Font.Underline
+    TBtnStrike.Value = TxtDescription.Format.Font.Strikeout
+    
+    
+    Select Case TxtDescription.Format.Alignment 
+        Case Align.Left
+            TBtnLeftAlign.Value = True
+        Case Align.Center
+            TBtnCenterAlign.Value = True
+        Case Align.Right
+            TBtnRightAlign.Value = True
+        Case Align.Normal
+            TBtnLeftAlign.Value = True
+    End Select
+    
+    
+    CmbFont.Text = TxtDescription.Format.Font.Name
+    SpnSize.Value = TxtDescription.Format.Font.Size
+    ClrBtnColor.Color = TxtDescription.Format.Color
+    ClrBtnBackColor.Color = TxtDescription.Format.Background
+    
+    
+    Object.Unlock(TBtnBold)
+    Object.Unlock(TBtnCenterAlign)
+    Object.Unlock(TBtnItalic)
+    Object.Unlock(TBtnLeftAlign)
+    Object.Unlock(TBtnRightAlign)
+    Object.Unlock(TBtnStrike)
+    Object.Unlock(TBtnUnderline)
+    Object.Unlock(ClrBtnColor)
+    Object.Unlock(ClrBtnBackColor)
+    Object.Unlock(CmbFont)
+    Object.Unlock(SpnSize)
+
+End
+
+Public Sub TBtnBold_Click()
+
+    TxtDescription.Format.Font.Bold = Last.Value
+
+End
+
+Public Sub TBtnItalic_Click()
+
+    TxtDescription.Format.Font.Italic = Last.Value
+
+End
+
+Public Sub TBtnUnderline_Click()
+
+    TxtDescription.Format.Font.Underline = Last.Value
+
+End
+
+Public Sub TBtnStrike_Click()
+
+    TxtDescription.Format.Font.Strikeout = Last.Value
+
+End
+
+Public Sub TBtnLeftAlign_Click()
+
+    TxtDescription.Format.Alignment = Align.Left
+
+End
+
+Public Sub TBtnCenterAlign_Click()
+
+    TxtDescription.Format.Alignment = Align.Center
+
+End
+
+Public Sub TBtnRightAlign_Click()
+
+    TxtDescription.Format.Alignment = Align.Right
+
+End
+
+Public Sub Form_Open()
+
+    Dim StrFont As String
+    
+    For Each StrFont In Fonts
+        CmbFont.Add(StrFont)
+    Next
+
+End
+
+Public Sub CmbFont_Click()
+
+    TxtDescription.Format.Font.Name = Last.Text
+
+End
+
+Public Sub SpnSize_Change()
+
+    TxtDescription.Format.Font.Size = Last.Text
+
+End
+
+Public Sub ClrBtnColor_Change()
+
+    TxtDescription.Format.Color = ClrBtnColor.Color
+
+End
+
+Public Sub ClrBtnBackColor_Change()
+
+    TxtDescription.Format.Background = ClrBtnBackColor.Color
+
+End
+
+
+Public Sub Label6_MouseDown()
+
+    
+
+End
+
+Public Sub BtnAttach_Click()
+
+    If Dialog.OpenFile() Then
+        'LblAttach.Text = "ضمیمه‌ای افزوده نشده است"
+    Else
+        LblAttach.Text = Dialog.Path
+        LblAttach.Tooltip = file.Name(Dialog.Path)
+        BtnDelAttach.Visible = True
+        BtnOpenAttach.Visible = True
+        'TglBtnCompress.Visible = True
+    Endif
+    
+
+End
+
+Public Sub BtnDelAttach_Click()
+
+    LblAttach.Text = "ضمیمه‌ای افزوده نشده است"
+    BtnDelAttach.Visible = False
+    BtnOpenAttach.Visible = False
+    'TglBtnCompress.Visible = False
+
+End
+
+Public Sub BtnOpenAttach_Click()
+    
+    Shell "nautilus " & "'" & LblAttach.Text & "'"
+
+End
+
+
