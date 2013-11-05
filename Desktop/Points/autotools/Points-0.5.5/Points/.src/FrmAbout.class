@@ -1,0 +1,13 @@
+' Gambas class file
+
+
+Public Sub Form_Open()
+
+    Me.Center()
+    
+   ' LblVersion.Text = Application.Version
+   
+   Lbl.Text = "Points version  " & Application.Version & " \n\n\nDesign And program BY HamidTB\n\n\nhamid.gnu@gmail.com " ""
+
+End
+
