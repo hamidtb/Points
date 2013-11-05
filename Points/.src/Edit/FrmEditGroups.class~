@@ -1,0 +1,145 @@
+' Gambas class file
+
+Public MC As New MainClass
+Public ObjRes As Result
+
+Public CatalogsID As New Integer[]
+Public GroupsID As New Integer[]
+
+Public OLD As String
+
+Public Function Refresh()
+    
+    Dim i As Integer
+    
+    Cmbgroups.Clear()
+    GroupsID.Clear()
+    
+    ObjRes = mc.CConnection().Exec("select id,groupname from groups where catalogs_id=" & CatalogsID[Cmbcatalogs.Index])
+    
+    For i = 1 To ObjRes.Count
+        
+        GroupsID.Add(ObjRes!id)
+        Cmbgroups.Add(ObjRes!groupname)
+        ObjRes.MoveNext()
+        
+    Next
+    
+    If Cmbgroups.Count = 0 Then
+        
+        Cmbgroups.Enabled = False
+        TxtGroups.Enabled = False
+        BtnEdit.Enabled = False
+        BtnDel.Enabled = False
+        TxtGroups.Text = ""
+        
+    Else
+        TxtGroups.Text = Cmbgroups.Text
+        OLD = Cmbgroups.Text
+        Cmbgroups.Enabled = True
+        TxtGroups.Enabled = True
+        BtnEdit.Enabled = True
+        BtnDel.Enabled = True
+        
+    Endif
+    
+End
+
+
+Public Sub Form_Open()
+    Dim i As Integer
+    Me.Center()
+    
+    ObjRes = mc.CConnection().Exec("select id,catalogname  from catalogs")
+    
+    
+    For i = 1 To ObjRes.Count
+        CatalogsID.Add(ObjRes!id)
+        Cmbcatalogs.Add(ObjRes!catalogname)
+        ObjRes.MoveNext()
+    Next
+    
+    If ObjRes.Count = 0 Then
+        
+        Panel1.Enabled = False
+        BtnEdit.Enabled = False
+        BtnDel.Enabled = False
+        
+    Else
+        
+        Refresh()
+        Panel1.Enabled = True
+        BtnEdit.Enabled = True
+        BtnDel.Enabled = True
+        
+    Endif
+    
+End
+
+Public Sub BtnExit_Click()
+
+    Me.Close()
+
+End
+
+Public Sub Cmbgroups_Click()
+
+    TxtGroups.Text = Cmbgroups.Text
+    OLD = Cmbgroups.Text
+    
+End
+
+Public Sub Cmbcatalogs_Click()
+
+    Refresh()
+
+End
+
+Public Sub BtnEdit_Click()
+    Dim RSpace As String
+    
+    RSpace = RTrim(LTrim(TxtGroups.Text))
+    
+    If TxtGroups Then
+        Print "select count(id) as Count from groups where lower(groupname)='" & Lower(RSpace) & "' and catalogs_id=" & CatalogsID[Cmbcatalogs.Index]
+        ObjRes = mc.CConnection().Exec("select count(id) as Count from groups where lower(groupname)='" & Lower(RSpace) & "' and catalogs_id=" & CatalogsID[Cmbcatalogs.Index])
+        If OLD <> TxtGroups.Text Then
+    
+            If CInt(ObjRes!Count) = 0 Then
+                mc.CConnection().Exec("update groups set groupname='" & RSpace & "' where id=" & GroupsID[Cmbgroups.Index])
+                Refresh()    
+            Else
+                Message("نام گروه تکراری است")
+            Endif    
+            
+        Endif
+        
+        
+       
+    Else
+        Message("لطفا نام جدید گروه را وارد کنید")
+    Endif
+
+End
+
+Public Sub BtnDel_Click()
+
+    If Message.Question("ایا مطمئن هستید", "بلی", "خیر") = 1 Then
+        
+        ObjRes = mc.CConnection().Exec("select count(id) as count from subgroups where groups_id=" & GroupsID[Cmbgroups.Index])
+    
+        If CInt(ObjRes!count) = 0 Then
+        
+            mc.CConnection().Exec("delete from groups where id=" & GroupsID[Cmbgroups.Index])
+            Refresh()
+            
+        Else
+        
+            Message.Error("این گروه شامل زیر مجموعه میباشد\n سیستم قادر به پاکسازی نیست")
+            
+        Endif
+        
+    Endif
+    
+
+End

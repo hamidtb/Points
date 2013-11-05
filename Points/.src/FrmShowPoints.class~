@@ -1,0 +1,397 @@
+' Gambas class file
+
+
+Public MC As New MainClass
+Public ObjRes As Result
+
+Public CatalogsID As New Integer[]
+Public GroupsID As New Integer[]
+Public SubGroupsID As New Integer[]
+
+
+
+
+Public Sub Form_Open()
+    
+    Dim i As Integer
+    
+    GVResult.Columns.Count = 6
+    GVResult.Columns[0].Title = "کد"
+    GVResult.Columns[0].Width = 0
+    
+    GVResult.Columns[1].Title = "دسته"
+    GVResult.Columns[1].Width = 120
+    GVResult.Columns[1].Alignment = Align.Center
+    
+    GVResult.Columns[2].Title = "گروه"
+    GVResult.Columns[2].Width = 120
+    GVResult.Columns[2].Alignment = Align.Center
+    
+    GVResult.Columns[3].Title = "زیرگروه"
+    GVResult.Columns[3].Width = 120
+    GVResult.Columns[3].Alignment = Align.Center
+    
+    
+    GVResult.Columns[4].Title = "عنوان نکته"
+    GVResult.Columns[4].Width = 400
+    GVResult.Columns[4].Alignment = Align.Center
+    
+    GVResult.Columns[5].Title = "ضمیمه"
+    GVResult.Columns[5].Width = 50
+    GVResult.Columns[5].Alignment = Align.Center
+    
+    Me.Center()
+    
+    ObjRes = mc.CConnection().Exec("select id,catalogname from catalogs")
+    
+    If CInt(ObjRes.Count) > 0 Then
+        
+        CatalogsID.Add(-1)
+        CmbCatlog.Add("همه دسته ها")
+        
+        For i = 1 To ObjRes.Count
+            
+            CatalogsID.Add(ObjRes!id)
+            CmbCatlog.Add(ObjRes!catalogname)
+            ObjRes.MoveNext()
+            
+        Next
+        CmbCatlog_Click()
+    Else
+        If CmbCatlog.Index <> 0 Then
+            CmbsubGroups.Clear()
+            subGroupsID.Clear()
+        Endif
+        TxtSearch.Enabled = False
+        CmbCatlog.Enabled = False
+        CmbGroups.Enabled = False
+        CmbSubgroups.Enabled = False
+        TxtSearch.Enabled = False
+        BtnSearch.Enabled = False
+    Endif
+    
+    'Message(CmbCatlog.Index)
+
+End
+
+Public Sub BtnExit_Click()
+
+    Me.Close()
+
+End
+
+Public Sub CmbCatlog_Click()
+    
+    Dim i As Integer
+    
+            
+    ObjRes = mc.CConnection().Exec("select id,groupname from groups where catalogs_id=" & CatalogsID[CmbCatlog.Index])
+    
+    CmbGroups.Clear()
+    GroupsID.Clear()
+    
+    If CInt(ObjRes.Count) > 0 Then
+        
+        GroupsID.Add(-1)
+        CmbGroups.Add("همه گروه ها")
+        
+        For i = 1 To ObjRes.Count
+            
+            GroupsID.Add(ObjRes!id)
+            CmbGroups.Add(ObjRes!groupname)
+            ObjRes.MoveNext()
+            
+        Next
+        TxtSearch.Enabled = True
+        CmbGroups.Enabled = True
+        CmbSubgroups.Enabled = True
+        'GVResult.Enabled = True
+        BtnSearch.Enabled = True
+        
+        CmbGroups_Click()
+        
+    Else
+        If CmbCatlog.Index <> 0 Then
+            CmbsubGroups.Clear()
+            subGroupsID.Clear()
+            'TxtSearch.Enabled = True
+        Endif
+       ' TxtSearch.Enabled = False
+        CmbGroups.Enabled = False
+        CmbSubgroups.Enabled = False
+        'GVResult.Enabled = False
+        BtnSearch.Enabled = False
+    Endif
+        
+    If CmbCatlog.Index = 0 Then
+    
+        CmbGroups.Clear()
+        GroupsID.Clear()
+        GroupsID.Add(-1)
+        CmbGroups.Add("همه گروه ها")
+        
+        CmbsubGroups.Clear()
+        SubGroupsID.Clear()
+        GroupsID.Add(-1)
+        CmbsubGroups.Add("همه زیر گروه ها")
+        
+        CmbGroups.Enabled = False
+        CmbSubgroups.Enabled = False
+        BtnSearch.Enabled = True
+        
+    Endif
+
+End
+
+Public Sub CmbGroups_Click()
+
+    Dim i As Integer
+    
+            
+    ObjRes = mc.CConnection().Exec("select id,subgroupname from subgroups where groups_id=" & GroupsID[CmbGroups.Index])
+    
+    CmbsubGroups.Clear()
+    subGroupsID.Clear()
+    
+    If CInt(ObjRes.Count) > 0 Then
+        
+        subGroupsID.Add(-1)
+        CmbsubGroups.Add("همه زیرگروه ها")
+        
+        For i = 1 To ObjRes.Count
+            
+            subGroupsID.Add(ObjRes!id)
+            CmbSubgroups.Add(ObjRes!subgroupname)
+            ObjRes.MoveNext()
+            
+        Next
+        TxtSearch.Enabled = True
+        CmbSubgroups.Enabled = True
+        'GVResult.Enabled = True
+        BtnSearch.Enabled = True
+    Else
+    
+        CmbSubgroups.Enabled = False
+        'GVResult.Enabled = False
+        BtnSearch.Enabled = False
+        'TxtSearch.Enabled = False
+    Endif
+    
+    
+    If CmbGroups.Index = 0 Then
+        
+        CmbsubGroups.Clear()
+        subGroupsID.Clear()
+        subGroupsID.Add(-1)
+        CmbsubGroups.Add("همه زیرگروه ها")
+        
+        CmbSubgroups.Enabled = False
+        BtnSearch.Enabled = True
+    Endif
+
+End
+
+Public Sub BtnSearch_Click()
+    Dim i, ii As Integer
+    Dim Where As String
+    
+    If TxtSearch.Text Then
+        Where = " points.title like '%" & TxtSearch.Text & "%'"
+    Endif
+    
+    If CmbCatlog.Count > 0 And CatalogsID[CmbCatlog.Index] <> -1 Then
+        If Where Then
+            Where &= " and points.catalogs_id=" & CatalogsID[CmbCatlog.Index]
+        Else
+            Where = " points.catalogs_id=" & CatalogsID[CmbCatlog.Index]
+        Endif
+    Endif
+    
+    If CmbGroups.Count > 0 And GroupsID[CmbGroups.Index] <> -1 Then 
+        If Where Then
+            Where &= " and points.groups_id=" & GroupsID[CmbGroups.Index]
+        Else
+            Where = " points.groups_id=" & GroupsID[CmbGroups.Index]
+        Endif
+    Endif
+    
+    If CmbSubgroups.Count > 0 And CmbSubgroups.Index <> 0 Then
+        If Where Then
+            Where &= " and points.subgroups_id=" & SubGroupsID[CmbSubgroups.Index] 
+        Else
+            Where = " points.subgroups_id=" & SubGroupsID[CmbSubgroups.Index] 
+        Endif
+    Endif
+    
+    'Message("select points.id,points.title,description from points where" & Where)
+    'Print "Select points.id, catalogs.catalogname, groups.groupname, subgroups.subgroupname, points.title From points, catalogs, groups, subgroups where points.catalogs_id in( Select id From catalogs) And points.groups_id in( Select id From groups) And points.subgroups_id in( Select id From subgroups) And catalogs.id = points.catalogs_id And groups.id = points.groups_id And subgroups.id = points.subgroups_id And " & Where 
+    If Where Then
+        ObjRes = mc.CConnection().Exec("select  points.id,catalogs.catalogname,groups.groupname,subgroups.subgroupname,points.title,points.attach_file from points, catalogs, groups, subgroups where points.catalogs_id in( Select id From catalogs) And points.groups_id in( Select id From groups) And points.subgroups_id in( Select id From subgroups) and catalogs.id=points.catalogs_id and groups.id=points.groups_id and subgroups.id=points.subgroups_id and " & Where)
+    Else
+        ObjRes = mc.CConnection().Exec("select  points.id,catalogs.catalogname,groups.groupname,subgroups.subgroupname,points.title,points.attach_file from points, catalogs, groups, subgroups where points.catalogs_id in( Select id From catalogs) And points.groups_id in( Select id From groups) And points.subgroups_id in( Select id From subgroups) and catalogs.id=points.catalogs_id and groups.id=points.groups_id and subgroups.id=points.subgroups_id ")
+    Endif
+    
+    GVResult.Clear()
+    GVResult.Rows.Count = 0
+    
+    If ObjRes.Count > 0 Then
+        
+        GVResult.Rows.Count = ObjRes.Count
+        
+        
+        For i = 0 To ObjRes.Count - 1
+    
+            GVResult[i, 0].Text = ObjRes!id
+            GVResult[i, 1].Text = ObjRes!catalogname
+            GVResult[i, 2].Text = ObjRes!groupname
+            GVResult[i, 3].Text = ObjRes!subgroupname
+            GVResult[i, 4].Text = ObjRes!title
+            If ObjRes!attach_file == "no_attach" Then
+                GVResult[i, 5].Text = "ندارد"
+            Else
+                GVResult[i, 5].Text = "دارد"
+            Endif
+            ObjRes.MoveNext
+            
+        Next
+        
+        
+            GVResult.Rows[0].Selected = True
+            BtnSaveAs.Enabled = True
+            GVResult_Change()
+    Endif
+
+End
+
+Public Sub GVResult_Change()
+
+    'Message(GVResult[GVResult.Row, 0].Text)
+    '
+    If GVResult.Rows.Count > 0 Then
+    
+        ObjRes = mc.CConnection().Exec("select description,attach_file from points where id=" & GVResult[GVResult.Row, 0].Text)
+    
+    TxtDescription.RichText = ObjRes!description
+    If ObjRes!attach_file == "no_attach" Then
+        LblAttach.Text = "ضمیمه‌ای افزوده نشده است"
+        BtnOpenAttach.Enabled = False
+        BtnSaveAttach.Enabled = False
+    Else
+        LblAttach.Text = ObjRes!attach_file
+        BtnOpenAttach.Enabled = True
+        BtnSaveAttach.Enabled = True
+    Endif
+    LblPos.Text = GVResult[GVResult.Row, 1].Text & "<b> <font color='blue'>  >  </font></b>" & GVResult[GVResult.Row, 2].Text & "<b> <font color='blue'>  >  </font></b>" & GVResult[GVResult.Row, 3].Text & "<b> <font color='blue'>  >  </font></b>" & GVResult[GVResult.Row, 4].Text
+        
+    Else
+        TxtDescription.Clear()
+        LblPos.Text = ""
+    Endif
+    
+    
+End
+
+Public Sub TxtDescription_Change()
+
+    'Message("change")
+
+End
+
+
+Public Sub CmbCatlog_Change()
+
+    Message.Info("change")
+
+End
+
+Public Sub BtnOpenAttach_Click()
+
+    Dim Attach As String
+    Attach = GVResult[GVResult.Row, 0].Text
+    'Message.Info(Attach)
+    
+    If Exist("/tmp/Points") Then
+        Shell "rm -rf /tmp/Points/*.*"
+        'Shell "mkdir /tmp/Points"
+        'Message.Info("Deleted.")
+    Else
+        Shell "mkdir /tmp/Points"
+    Endif
+    
+    Shell "unzip '" & user.Home & "/.Points/DB/AttachFiles/" & Attach & "' -d /tmp/Points"
+    Shell " nautilus /tmp/Points/"
+
+End
+
+Public Sub Form_Close()
+
+    Shell "rm -rf /tmp/Points/"
+
+End
+
+Public Sub BtnSaveAs_Click()
+
+    MnuSaveAs.Popup()
+
+End
+
+Public Sub MnuSaveAsPDF_Click()
+
+Dim PDFFile As File
+
+If Not Exist("/tmp/Convert") Then
+    Mkdir "/tmp/Convert"
+Endif
+    
+    Dialog.Title = "Save Points in PDF Format ... "
+    Dialog.Filter = ["*.PDF", "PDF Files"]
+    'SaveDailog.
+     If Not Dialog.SaveFile() Then
+         
+         PDFFile = Open "/tmp/Convert/convert.html" For Create
+         PDFFile.Save("/tmp/Convert/convert.html", TxtDescription.RichText)
+         PDFFile.Close()
+         
+         Shell "wkhtmltopdf --no-background  /tmp/Convert/convert.html '" & Dialog.Path & ".pdf' ; nautilus '" & dialog.Path & ".pdf'"
+         
+         'PDFFile = Open dialog.Path & ".html" For Create
+         'PDFFile.Save(dialog.Path & ".html", TxtDescription.RichText)
+         'Shell "nautilus '" & dialog.Path & ".pdf'"
+        
+         
+     Endif
+    
+    
+
+End
+
+Public Sub MnuSaveAsHTML_Click()
+
+   Dim HTMLFile As File
+    Dialog.Title = "Save Points in HTML Format ... "
+    Dialog.Filter = ["*.html;*.htm", "HTML Files"]
+    'SaveDailog.
+     If Not Dialog.SaveFile() Then
+         
+         HTMLFile = Open dialog.Path & ".html" For Create
+         HTMLFile.Save(dialog.Path & ".html", TxtDescription.RichText)
+         HTMLFile.Close()
+         Shell "sleep 2; nautilus '" & dialog.Path & ".html'"
+         
+     Endif
+
+End
+
+Public Sub BtnSaveAttach_Click()
+        Dim Attach As String
+         Attach = GVResult[GVResult.Row, 0].Text
+         
+         ObjRes = mc.CConnection().Exec("select attach_file from points where id=" & Attach)
+         
+        If Not dialog.SelectDirectory() Then
+                Print user.Home & "/.Points/DB/AttachFiles/" & Attach & "' -d '" & dialog.Path & "/'" & ObjRes!attach_file & "'"
+                Shell "unzip '" & user.Home & "/.Points/DB/AttachFiles/" & Attach & "' -d '" & dialog.Path & "/'" & ObjRes!attach_file & "'"
+                Shell " nautilus '" & dialog.Path & "'"
+        Endif
+
+End

@@ -1,0 +1,47 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,47,24)
+  Text = ("ثبت زیر گروه جدید")
+  Icon = Picture["Points.png"]
+  SkipTaskbar = True
+  { Frame1 Frame
+    MoveScaled(1,1,45,16)
+    { Label1 Label
+      MoveScaled(34,1,8,4)
+      AutoResize = True
+      Text = ("نام دسته : ")
+    }
+    { Label2 Label
+      MoveScaled(34,6,8,4)
+      AutoResize = True
+      Text = ("نام گروه : ")
+    }
+    { TxtSubgroup TextBox
+      MoveScaled(1,11,33,4)
+    }
+    { Cmbcatalog ComboBox
+      MoveScaled(1,1,33,4)
+      ReadOnly = True
+    }
+    { CmbGroup ComboBox
+      MoveScaled(1,6,33,4)
+      ReadOnly = True
+    }
+    { Label3 Label
+      MoveScaled(34,11,10,4)
+      AutoResize = True
+      Text = ("نام زیرگروه : ")
+    }
+  }
+  { BtnExit Button
+    MoveScaled(1,18,10,5)
+    Text = ("خروج")
+    Picture = Picture["icon:/22/close"]
+  }
+  { BtnAdd Button
+    MoveScaled(36,18,10,5)
+    Text = ("ثبت")
+    Picture = Picture["icon:/22/add"]
+  }
+}

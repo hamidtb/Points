@@ -1,0 +1,100 @@
+' Gambas class file
+
+Public CatalogID As New Integer[]
+Function CConnection() As Connection
+ 
+    Dim ObjConnect As New Connection   
+    
+    With ObjConnect
+        .Type = "sqlite3"
+        .Host = User.Home
+        .Name = User.Home & "/.Points/DB/Points"
+    End With
+    
+    Return ObjConnect
+    
+End
+
+
+Public Sub BtnExit_Click()
+
+    Me.Close()
+
+End
+
+Public Sub Form_Show()
+
+    'Dim ObjConnect As New Connection
+    Dim ObjRes As Result
+    Dim i As Integer
+    
+    Dim MC As New MainClass
+    
+    ' With ObjConnect
+    '     .Type = "sqlite3"
+    '     .Host = User.Home
+    '     .Name = User.Home & "/.Points/DB/Points"
+    ' End With
+    
+    MC.CConnection().Open()
+    ObjRes = MC.CConnection().Exec("select id,catalogname from catalogs")
+    
+   ' Message(ObjRes.Count)
+    
+    For i = 1 To ObjRes.Count 
+    
+        Cmbcatalog.Add(ObjRes!catalogname)
+        CatalogID.Add(ObjRes!id)
+        'Message(ObjRes!catalogname & ObjRes!id)
+        ObjRes.MoveNext()
+        
+    Next
+    'Message(Cmbcatalog.Index)
+    If Cmbcatalog.Count = 0 Then
+        Frame1.Enabled = False
+        BtnAdd.Enabled = False
+        Message.Info("هنوز هیچ دسته ای ثبت نشده است")
+    Else
+        Cmbcatalog.Index = 0
+    Endif
+    MC.CConnection().Close()
+
+End
+
+Public Sub BtnAdd_Click()
+    
+    Dim ObjConnect As New MainClass
+    Dim ObjRes As Result
+    Dim Count, MaxID As Integer
+    Dim RSpace As String
+    
+    RSpace = LTrim(RTrim(TxtGroup.Text))
+    
+    ObjConnect.CConnection().Open()
+    If TxtGroup.Text Then
+        ObjRes = ObjConnect.CConnection().Exec("select count(id)as id from groups where groupname='" & RSpace & "' and catalogs_id=" & CatalogID[Cmbcatalog.Index])
+        Count = ObjRes!id
+        ''Message(Count)
+        
+        If Count = 0 Then
+            ObjRes = ObjConnect.CConnection().Exec("select max(id)as MaxID from groups")
+            Try MaxID = ObjRes!MaxID
+            If Error Then
+                MaxID = 0    
+            Endif
+            
+            MaxID = MaxID + 1
+            'Message("insert into groups(id,catalogs_id,groupname) values(" & MaxID & "," & CatalogID[Cmbcatalog.Index] & ",'" & LTrim(RTrim(TxtGroup.Text)) & "')")
+            ObjConnect.CConnection().Exec("insert into groups(id,catalogs_id,groupname) values(" & MaxID & "," & CatalogID[Cmbcatalog.Index] & ",'" & RSpace & "')")
+            TxtGroup.Clear()
+
+        Else
+            Message("نام گروه تکراری است")
+        Endif
+    Else
+        Message("لطفا نام گروه را وارد کنید")
+    Endif
+    
+    ObjConnect.CConnection().Close()
+
+End

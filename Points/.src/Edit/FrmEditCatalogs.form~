@@ -1,0 +1,46 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,49,19)
+  Icon = Picture["Points.png"]
+  Resizable = False
+  SkipTaskbar = True
+  { Panel1 Panel
+    MoveScaled(1,1,47,11)
+    Border = Border.Plain
+    { Label1 Label
+      MoveScaled(34,1,8,4)
+      AutoResize = True
+      Text = ("نام دسته : ")
+      Alignment = Align.Left
+    }
+    { Cmbcatalog ComboBox
+      MoveScaled(1,1,33,4)
+      ReadOnly = True
+    }
+    { Label2 Label
+      MoveScaled(34,6,12,4)
+      AutoResize = True
+      Text = ("نام جدید دسته : ")
+      Alignment = Align.Left
+    }
+    { TxtCatalog TextBox
+      MoveScaled(1,6,33,4)
+    }
+  }
+  { BtnEdit Button
+    MoveScaled(38,13,10,5)
+    Text = ("ویرایش")
+    Picture = Picture["icon:/22/edit"]
+  }
+  { BtnExit Button
+    MoveScaled(1,13,10,5)
+    Text = ("خروج")
+    Picture = Picture["icon:/22/close"]
+  }
+  { BtnDel Button
+    MoveScaled(28,13,10,5)
+    Text = ("حذف")
+    Picture = Picture["icon:/22/delete"]
+  }
+}

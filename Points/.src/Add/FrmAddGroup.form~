@@ -1,0 +1,45 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,45,19)
+  Text = ("ثبت گروه جدید")
+  Icon = Picture["Points.png"]
+  Resizable = False
+  SkipTaskbar = True
+  { Frame1 Frame
+    MoveScaled(1,1,43,11)
+    { Cmbcatalog ComboBox
+      MoveScaled(1,1,33,4)
+      Font = Font["11"]
+      ReadOnly = True
+    }
+    { TxtGroup TextBox
+      MoveScaled(1,6,33,4)
+      Font = Font["11"]
+    }
+    { Label1 Label
+      MoveScaled(34,1,8,4)
+      Font = Font["11"]
+      AutoResize = True
+      Text = ("نام دسته : ")
+    }
+    { Label2 Label
+      MoveScaled(34,6,8,4)
+      Font = Font["11"]
+      AutoResize = True
+      Text = ("نام گروه : ")
+    }
+  }
+  { BtnExit Button
+    MoveScaled(1,13,10,5)
+    Font = Font["11"]
+    Text = ("خروج")
+    Picture = Picture["icon:/22/close"]
+  }
+  { BtnAdd Button
+    MoveScaled(34,13,10,5)
+    Font = Font["11"]
+    Text = ("ثبت")
+    Picture = Picture["icon:/22/add"]
+  }
+}
